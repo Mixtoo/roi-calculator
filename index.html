@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROI/ROAS 计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #64748b;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 24px 24px 0;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .card-content {
+            padding: 0 24px 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            font-size: 0.875rem;
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            font-size: 0.875rem;
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        .input-prefix + input {
+            padding-left: 32px;
+        }
+
+        .input-suffix + input {
+            padding-right: 32px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .metric-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .metric-description {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .roi-positive { color: #059669; }
+        .roi-negative { color: #dc2626; }
+        .roas-good { color: #0d9488; }
+        .profit-positive { color: #7c3aed; }
+        .profit-negative { color: #dc2626; }
+        .break-even { color: #ea580c; }
+
+        .analysis-section {
+            grid-column: span 2;
+        }
+
+        .analysis-content {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .financial-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .overview-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .overview-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .overview-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .status-profit {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-loss {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-breakeven {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .recommendations {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .recommendations h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            font-size: 0.875rem;
+            color: #4b5563;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .recommendations li:last-child {
+            border-bottom: none;
+        }
+
+        .recommendations li::before {
+            content: "•";
+            color: #3b82f6;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .analysis-section {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .financial-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 16px;
+            }
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .input-grid .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 640px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ROI/ROAS 计算器</h1>
+            <p>精确计算广告投资回报率，优化营销策略</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- 输入区域 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">基础数据</h3>
+                    <p class="card-subtitle">输入产品和广告相关数据</p>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="selling-price">销售价格</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="selling-price" value="100" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cost">产品成本</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="cost" value="85" min="0" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">销售数量</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="quantity" value="100" min="1" step="1">
+                            <span class="input-suffix">件</span>
+                        </div>
+                    </div>
+
+                    <div class="input-grid">
+                        <div class="form-group">
+                            <label for="refund-rate">总退款率</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="refund-rate" value="8" min="0" max="100" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="partial-refund-ratio">部分退款占比</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="partial-refund-ratio" value="62.5" min="0" max="100" step="0.1">
+                                <span class="input-suffix">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="partial-refund-rate">部分退款比例</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="partial-refund-rate" value="20" min="0" max="100" step="1">
+                            <span class="input-suffix">%</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ad-spend">广告投入</label>
+                        <div class="input-wrapper">
+                            <span class="input-prefix">$</span>
+                            <input type="number" id="ad-spend" value="500" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果区域 -->
+            <div class="results-section">
+                <div class="results-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">ROI</div>
+                        <div class="metric-value roi-positive" id="roi-value">0%</div>
+                        <div class="metric-description">投资回报率</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">ROAS</div>
+                        <div class="metric-value roas-good" id="roas-value">0:1</div>
+                        <div class="metric-description">广告支出回报</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">净利润</div>
+                        <div class="metric-value profit-positive" id="profit-value">$0</div>
+                        <div class="metric-description">扣除广告费用后</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-label">盈亏平衡ROAS</div>
+                        <div class="metric-value break-even" id="break-even-value">0:1</div>
+                        <div class="metric-description">最低要求</div>
+                    </div>
+                </div>
+
+                <!-- 分析区域 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">财务分析</h3>
+                        <p class="card-subtitle">详细的盈利能力分析</p>
+                    </div>
+                    <div class="card-content">
+                        <div id="status-indicator"></div>
+                        
+                        <div class="financial-overview" id="financial-overview">
+                            <!-- 动态生成的财务概览 -->
+                        </div>
+
+                        <div class="recommendations">
+                            <h4>💡 优化建议</h4>
+                            <ul id="recommendations-list">
+                                <!-- 动态生成的建议 -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取输入元素
+        const inputs = {
+            sellingPrice: document.getElementById('selling-price'),
+            cost: document.getElementById('cost'),
+            quantity: document.getElementById('quantity'),
+            refundRate: document.getElementById('refund-rate'),
+            partialRefundRatio: document.getElementById('partial-refund-ratio'),
+            partialRefundRate: document.getElementById('partial-refund-rate'),
+            adSpend: document.getElementById('ad-spend')
+        };
+
+        // 获取结果显示元素
+        const results = {
+            roi: document.getElementById('roi-value'),
+            roas: document.getElementById('roas-value'),
+            profit: document.getElementById('profit-value'),
+            breakEven: document.getElementById('break-even-value'),
+            statusIndicator: document.getElementById('status-indicator'),
+            financialOverview: document.getElementById('financial-overview'),
+            recommendationsList: document.getElementById('recommendations-list')
+        };
+
+        // 格式化数字显示
+        function formatNumber(num, decimals = 2, forceDecimals = false) {
+            if (num === 0) return '0';
+            const rounded = Number(num.toFixed(decimals));
+            if (!forceDecimals && rounded === Math.floor(rounded)) {
+                return rounded.toString();
+            }
+            return rounded.toFixed(decimals);
+        }
+
+        // 计算函数 - 基于用户输入数量计算
+        function calculate() {
+            const data = {
+                sellingPrice: parseFloat(inputs.sellingPrice.value) || 0,
+                cost: parseFloat(inputs.cost.value) || 0,
+                quantity: parseInt(inputs.quantity.value) || 100,
+                refundRate: parseFloat(inputs.refundRate.value) || 0,
+                partialRefundRatio: parseFloat(inputs.partialRefundRatio.value) || 0,
+                partialRefundRate: parseFloat(inputs.partialRefundRate.value) || 0,
+                adSpend: parseFloat(inputs.adSpend.value) || 0
+            };
+
+            // 退款数量计算
+            const totalRefunds = data.quantity * (data.refundRate / 100);
+            const partialRefunds = totalRefunds * (data.partialRefundRatio / 100);
+            const fullRefunds = totalRefunds - partialRefunds;
+            
+            // 收入计算
+            const grossRevenue = data.quantity * data.sellingPrice;
+            const partialRefundAmount = partialRefunds * data.sellingPrice * (data.partialRefundRate / 100);
+            const fullRefundAmount = fullRefunds * data.sellingPrice;
+            const netRevenue = grossRevenue - partialRefundAmount - fullRefundAmount;
+            
+            // 成本计算（包括退款产品的成本损失）
+            const totalCost = data.quantity * data.cost;
+            const grossProfit = netRevenue - totalCost;
+            const netProfit = grossProfit - data.adSpend;
+            
+            // ROI和ROAS计算
+            const roi = data.adSpend > 0 ? (netProfit / data.adSpend) * 100 : 0;
+            const roas = data.adSpend > 0 ? netRevenue / data.adSpend : 0;
+            const breakEvenRoas = grossProfit > 0 ? netRevenue / grossProfit : 0;
+            
+            // 更新显示
+            updateResults({
+                roi,
+                roas,
+                netProfit,
+                breakEvenRoas,
+                grossRevenue,
+                netRevenue,
+                totalCost,
+                grossProfit,
+                refundRate: data.refundRate,
+                adSpendRatio: netRevenue > 0 ? (data.adSpend / netRevenue) * 100 : 0,
+                marginRate: netRevenue > 0 ? (grossProfit / netRevenue) * 100 : 0,
+                quantity: data.quantity
+            });
+        }
+
+        // 更新结果显示
+        function updateResults(calculated) {
+            // 更新指标卡片
+            results.roi.textContent = formatNumber(calculated.roi, 1) + '%';
+            results.roi.className = `metric-value ${calculated.roi >= 0 ? 'roi-positive' : 'roi-negative'}`;
+            
+            results.roas.textContent = formatNumber(calculated.roas, 2) + ':1';
+            results.roas.className = `metric-value ${calculated.roas >= 5 ? 'roas-good' : 'roi-negative'}`;
+            
+            results.profit.textContent = '$' + formatNumber(calculated.netProfit, 2);
+            results.profit.className = `metric-value ${calculated.netProfit >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            
+            results.breakEven.textContent = formatNumber(calculated.breakEvenRoas, 2) + ':1';
+
+            // 状态指示器
+            let statusClass, statusText;
+            if (calculated.netProfit > 0) {
+                statusClass = 'status-profit';
+                statusText = '✓ 盈利状态';
+            } else if (calculated.netProfit === 0) {
+                statusClass = 'status-breakeven';
+                statusText = '⚖ 盈亏平衡';
+            } else {
+                statusClass = 'status-loss';
+                statusText = '⚠ 亏损状态';
+            }
+            
+            results.statusIndicator.innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+
+            // 财务概览
+            results.financialOverview.innerHTML = `
+                <div class="overview-item">
+                    <div class="overview-label">总销售额 (${calculated.quantity}件)</div>
+                    <div class="overview-value">$${formatNumber(calculated.grossRevenue, 2)}</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-label">净销售额</div>
+                    <div class="overview-value">$${formatNumber(calculated.netRevenue, 2)}</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-label">总成本</div>
+                    <div class="overview-value">$${formatNumber(calculated.totalCost, 2)}</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-label">毛利润</div>
+                    <div class="overview-value">$${formatNumber(calculated.grossProfit, 2)}</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-label">毛利率</div>
+                    <div class="overview-value">${formatNumber(calculated.marginRate, 1)}%</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-label">广告费占比</div>
+                    <div class="overview-value">${formatNumber(calculated.adSpendRatio, 1)}%</div>
+                </div>
+            `;
+
+            // 优化建议
+            const recommendations = generateRecommendations(calculated);
+            results.recommendationsList.innerHTML = recommendations.map(rec => `<li>${rec}</li>`).join('');
+        }
+
+        // 生成优化建议
+        function generateRecommendations(calculated) {
+            const recommendations = [];
+            
+            if (calculated.roas < 3) {
+                recommendations.push('ROAS过低，建议优化广告投放策略或减少广告支出');
+            } else if (calculated.roas >= 3 && calculated.roas < 5) {
+                recommendations.push('ROAS处于基础水平，有进一步优化空间');
+            } else if (calculated.roas >= 8) {
+                recommendations.push('ROAS表现优异，可考虑适度增加广告投入扩大规模');
+            }
+            
+            if (calculated.refundRate > 6) {
+                recommendations.push(`退款率${formatNumber(calculated.refundRate, 1)}%偏高，建议改善产品质量或优化产品描述`);
+            }
+            
+            if (calculated.roi < 0) {
+                recommendations.push('当前处于亏损状态，建议重新评估成本结构或定价策略');
+            } else if (calculated.roi > 0 && calculated.roi < 100) {
+                recommendations.push('ROI为正但较低，建议优化广告效率或提高产品利润率');
+            } else if (calculated.roi >= 200) {
+                recommendations.push('ROI表现良好，业务模式健康可持续');
+            }
+            
+            if (calculated.adSpendRatio > 15) {
+                recommendations.push('广告费用占比较高，建议优化投放效率');
+            }
+            
+            if (calculated.marginRate < 20) {
+                recommendations.push('毛利率较低，建议考虑优化成本结构或提高售价');
+            }
+
+            return recommendations.length > 0 ? recommendations : ['当前指标表现良好，继续保持现有策略'];
+        }
+
+        // 添加事件监听器
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // 初始计算
+        calculate();
+    </script>
+</body>
+</html>
